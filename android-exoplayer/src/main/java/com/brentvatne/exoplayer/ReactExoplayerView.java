@@ -175,10 +175,10 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
     };
-    
+
     public double getPositionInFirstPeriodMsForCurrentWindow(long currentPosition) {
         Timeline.Window window = new Timeline.Window();
-        if(!player.getCurrentTimeline().isEmpty()) {    
+        if(!player.getCurrentTimeline().isEmpty()) {
             player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), window);
         }
         return window.windowStartTimeMs + currentPosition;
@@ -1271,6 +1271,7 @@ class ReactExoplayerView extends FrameLayout implements
             eventEmitter.fullscreenWillDismiss();
             if (fullScreenDelegate != null) {
                 fullScreenDelegate.closeFullScreen();
+                exoPlayerView.setPlayer(player);
             }
             eventEmitter.fullscreenDidDismiss();
         }
