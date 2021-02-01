@@ -899,10 +899,11 @@ static int const RCTVideoUnset = -1;
 #if TARGET_OS_IOS
 - (void)setRestoreUserInterfaceForPIPStopCompletionHandler:(BOOL)restore
 {
-  if (_restoreUserInterfaceForPIPStopCompletionHandler != NULL) {
-    _restoreUserInterfaceForPIPStopCompletionHandler(restore);
-    _restoreUserInterfaceForPIPStopCompletionHandler = NULL;
-  }
+  // TODO: investigate the reason why this is even necessary...
+  // if (_restoreUserInterfaceForPIPStopCompletionHandler != NULL) {
+  //   _restoreUserInterfaceForPIPStopCompletionHandler(restore);
+  // _restoreUserInterfaceForPIPStopCompletionHandler = NULL;
+  // }
 }
 
 - (void)setupPipController {
@@ -2004,11 +2005,12 @@ didCancelLoadingRequest:(AVAssetResourceLoadingRequest *)loadingRequest {
 }
 
 - (void)pictureInPictureController:(AVPictureInPictureController *)pictureInPictureController restoreUserInterfaceForPictureInPictureStopWithCompletionHandler:(void (^)(BOOL))completionHandler {
-  NSAssert(_restoreUserInterfaceForPIPStopCompletionHandler == NULL, @"restoreUserInterfaceForPIPStopCompletionHandler was not called after picture in picture was exited.");
-  if (self.onRestoreUserInterfaceForPictureInPictureStop) {
-    self.onRestoreUserInterfaceForPictureInPictureStop(@{});
-  }
-  _restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
+  // TODO: investigate the reason why this is even necessary...
+  // NSAssert(_restoreUserInterfaceForPIPStopCompletionHandler == NULL, @"restoreUserInterfaceForPIPStopCompletionHandler was not called after picture in picture was exited.");
+  // if (self.onRestoreUserInterfaceForPictureInPictureStop) {
+  //   self.onRestoreUserInterfaceForPictureInPictureStop(@{});
+  // }
+  // _restoreUserInterfaceForPIPStopCompletionHandler = completionHandler;
 }
 #endif
 
