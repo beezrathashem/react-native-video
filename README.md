@@ -117,9 +117,8 @@ Select RCTVideo-tvOS
 ### Android installation
 <details>
   <summary>Android details</summary>
- 
-Linking is not required in React Native 0.60 and above.
-If your project is using React Native < 0.60, run `react-native link react-native-video` to link the react-native-video library.
+
+Run `react-native link react-native-video` to link the react-native-video library.
 
 Or if you have trouble, make the following additions to the given files manually:
 
@@ -416,11 +415,6 @@ Determines whether video audio should override background music/audio in Android
 
 Platforms: Android Exoplayer
 
-### DRM
-To setup DRM please follow [this guide](./DRM.md)
-
-Platforms: Android Exoplayer, iOS
-
 #### filter
 Add video filter
 * **FilterType.NONE (default)** - No Filter
@@ -475,7 +469,7 @@ Platforms: iOS
 * **landscape**
 * **portrait**
 
-Platforms: iOS
+Platforms: Android ExoPlayer, iOS
 
 #### headers
 Pass headers to the HTTP client. Can be used for authorization. Headers must be a part of the source object.
@@ -804,17 +798,6 @@ source={{ uri: 'ipod-library:///path/to/music.mp3' }}
 Note: Using this feature adding an entry for NSAppleMusicUsageDescription to your Info.plist file as described [here](https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CocoaKeys.html)
 
 Platforms: iOS
-
-##### Explicit mimetype for the stream
-
-Provide a member `type` with value (`mpd`/`m3u8`/`ism`) inside the source object.
-Sometimes is needed when URL extension does not match with the mimetype that you are expecting, as seen on the next example. (Extension is .ism -smooth streaming- but file served is on format mpd -mpeg dash-)
-
-Example:
-```
-source={{ uri: 'http://host-serving-a-type-different-than-the-extension.ism/manifest(format=mpd-time-csf)',
-type: 'mpd' }}
-```
 
 ###### Other protocols
 
