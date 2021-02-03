@@ -441,6 +441,7 @@ Video.propTypes = {
   controls: PropTypes.bool,
   audioOnly: PropTypes.bool,
   currentTime: PropTypes.number,
+  showPictureInPictureOnLeave: PropTypes.bool,
   fullscreenAutorotate: PropTypes.bool,
   fullscreenOrientation: PropTypes.oneOf(['all', 'landscape', 'portrait']),
   progressUpdateInterval: PropTypes.number,

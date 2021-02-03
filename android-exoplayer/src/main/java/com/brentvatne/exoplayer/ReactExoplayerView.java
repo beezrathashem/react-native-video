@@ -1,12 +1,18 @@
 package com.brentvatne.exoplayer;
 
+import android.app.Activity;
 import android.annotation.SuppressLint;
+import android.app.PictureInPictureParams;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -96,6 +102,8 @@ class ReactExoplayerView extends FrameLayout implements
     private int uid = ++UNIQUE_ID;
     private FullScreenDelegate fullScreenDelegate;
 
+    private final BroadcastReceiver pipReceiver;
+    private final BroadcastReceiver leaveReceiver;
     private final VideoEventEmitter eventEmitter;
     private final ReactExoplayerConfig config;
     private final DefaultBandwidthMeter bandwidthMeter;
@@ -118,6 +126,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean isInBackground;
     private boolean isInFullscreen;
     private boolean isPaused;
+    private boolean isInPictureInPictureMode;
     private boolean isBuffering;
     private boolean muted = false;
     private float rate = 1f;
@@ -149,12 +158,36 @@ class ReactExoplayerView extends FrameLayout implements
     private Map<String, String> requestHeaders;
     private boolean mReportBandwidth = false;
     private boolean controls;
+    private boolean showPictureInPictureOnLeave;
     // \ End props
 
     // React
     private final ThemedReactContext themedReactContext;
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
+
+    ReactExoplayerView self = this;
+
+    pipReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            boolean isInPictureInPictureMode = intent.getBooleanExtra("isInPictureInPictureMode", false);
+            self.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        }
+    };
+
+    leaveReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (showPictureInPictureOnLeave) {
+                self.setPictureInPicture(true);
+            }
+        }
+    };
+
+    Activity activity = themedReactContext.getCurrentActivity();
+    activity.registerReceiver(pipReceiver, new IntentFilter("onPictureInPictureModeChanged"));
+    activity.registerReceiver(leaveReceiver, new IntentFilter("onUserLeaveHint"));
 
     private final Handler progressHandler = new Handler() {
         @Override
@@ -258,7 +291,7 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onHostPause() {
         isInBackground = true;
-        if (playInBackground) {
+        if (playInBackground || showPictureInPictureOnLeave) {
             return;
         }
         setPlayWhenReady(false);
@@ -269,10 +302,65 @@ class ReactExoplayerView extends FrameLayout implements
         stopPlayback();
     }
 
+    Activity activity = themedReactContext.getCurrentActivity();
+    if (activity == null) return;
+    try {
+        activity.unregisterReceiver(pipReceiver);
+        activity.unregisterReceiver(leaveReceiver);
+    } catch (Exception ignore) {
+        // ignore if already unregistered
+    }
+
     public void cleanUpResources() {
         stopPlayback();
         instances.remove(uid);
     }
+
+
+        /**
+         * Handling showPictureInPictureOnLeave prop.
+         *
+         * @param showPictureInPictureOnLeaveProp If true, enter pip mode when pressing home or recent HW button.
+         */
+        public void setShowPictureInPictureOnLeave(boolean showPictureInPictureOnLeaveProp) {
+            showPictureInPictureOnLeave = showPictureInPictureOnLeaveProp;
+        }
+
+        /**
+         * Handling pip prop.
+         *
+         * @param pictureInPicture  Pip prop, if true, enter PIP mode.
+         */
+        public void setPictureInPicture(boolean pictureInPicture) {
+            if (!isInPictureInPictureMode && pictureInPicture) {
+                this.enterPictureInPictureMode();
+            }
+            isInPictureInPictureMode = pictureInPicture;
+        }
+
+        /**
+         * PIP handled, for N devices that support it, not "officially".
+         */
+        public void enterPictureInPictureMode() {
+            PackageManager packageManager = themedReactContext.getPackageManager();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                    && packageManager
+                    .hasSystemFeature(
+                            PackageManager.FEATURE_PICTURE_IN_PICTURE)) {
+                long videoPosition = player.getCurrentPosition();
+                Activity activity = themedReactContext.getCurrentActivity();
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    PictureInPictureParams.Builder params = new PictureInPictureParams.Builder();
+                    activity.enterPictureInPictureMode(params.build());
+                } else {
+                    activity.enterPictureInPictureMode();
+                }
+            }
+        }
+
+        public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+            eventEmitter.pictureInPictureModeChanged(isInPictureInPictureMode);
+        }
 
     //BandwidthMeter.EventListener implementation
     @Override
