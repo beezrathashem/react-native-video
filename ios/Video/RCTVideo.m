@@ -106,12 +106,12 @@ static int const RCTVideoUnset = -1;
     _progressUpdateInterval = 250;
     _controls = NO;
     _playerBufferEmpty = YES;
-    _playInBackground = false;
+    _playInBackground = true;
     _preventsDisplaySleepDuringVideoPlayback = true;
     _preferredForwardBufferDuration = 0.0f;
     _allowsExternalPlayback = YES;
     _playWhenInactive = false;
-    _pictureInPicture = false;
+    _pictureInPicture = true;
     _ignoreSilentSwitch = @"inherit"; // inherit, ignore, obey
     _mixWithOthers = @"inherit"; // inherit, mix, duck
 #if TARGET_OS_IOS
@@ -124,23 +124,23 @@ static int const RCTVideoUnset = -1;
                                              selector:@selector(applicationWillResignActive:)
                                                  name:UIApplicationWillResignActiveNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationDidEnterBackground:)
                                                  name:UIApplicationDidEnterBackgroundNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillEnterForeground:)
                                                  name:UIApplicationWillEnterForegroundNotification
                                                object:nil];
-    
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(audioRouteChanged:)
                                                  name:AVAudioSessionRouteChangeNotification
                                                object:nil];
   }
-  
+
   return self;
 }
 
@@ -169,7 +169,7 @@ static int const RCTVideoUnset = -1;
   {
     return([playerItem duration]);
   }
-  
+
   return(kCMTimeInvalid);
 }
 
@@ -180,7 +180,7 @@ static int const RCTVideoUnset = -1;
   {
     return [playerItem seekableTimeRanges].firstObject.CMTimeRangeValue;
   }
-  
+
   return (kCMTimeRangeZero);
 }
 
@@ -221,10 +221,10 @@ static int const RCTVideoUnset = -1;
 
 - (void)applicationWillResignActive:(NSNotification *)notification
 {
-  if (_playInBackground || _playWhenInactive || _paused) return;
-  
-  [_player pause];
-  [_player setRate:0.0];
+//   if (_playInBackground || _playWhenInactive || _paused) return;
+
+//   [_player pause];
+//   [_player setRate:0.0];
 }
 
 - (void)applicationDidEnterBackground:(NSNotification *)notification
