@@ -5,7 +5,6 @@ import android.content.Context;
 import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.TextureView;
@@ -14,16 +13,18 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.PlaybackException;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.PlaybackParameters;
+import com.google.android.exoplayer2.SimpleExoPlayer;
+import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.Tracks;
+import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.text.Cue;
+import com.google.android.exoplayer2.text.TextRenderer;
+import com.google.android.exoplayer2.text.TextOutput;
 import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.ui.SubtitleView;
-import com.google.android.exoplayer2.video.VideoSize;
 
 import java.util.List;
 
@@ -35,12 +36,11 @@ public final class ExoPlayerView extends FrameLayout {
     private final SubtitleView subtitleLayout;
     private final AspectRatioFrameLayout layout;
     private final ComponentListener componentListener;
-    private ExoPlayer player;
+    private SimpleExoPlayer player;
     private Context context;
     private ViewGroup.LayoutParams layoutParams;
 
     private boolean useTextureView = true;
-    private boolean useSecureView = false;
     private boolean hideShutterView = false;
 
     public ExoPlayerView(Context context) {
@@ -101,27 +101,9 @@ public final class ExoPlayerView extends FrameLayout {
             player.setVideoSurfaceView((SurfaceView) surfaceView);
         }
     }
-    public void setSubtitleStyle(SubtitleStyle style) {
-        // ensure we reset subtile style before reapplying it
-        subtitleLayout.setUserDefaultStyle();
-        subtitleLayout.setUserDefaultTextSize();
-
-        if (style.getFontSize() > 0) {
-            subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, style.getFontSize());
-        }
-        subtitleLayout.setPadding(style.getPaddingLeft(), style.getPaddingTop(), style.getPaddingRight(), style.getPaddingBottom());
-    }
 
     private void updateSurfaceView() {
-        View view;
-        if (!useTextureView || useSecureView) {
-            view = new SurfaceView(context);
-            if (useSecureView) {
-                ((SurfaceView)view).setSecure(true);
-            }
-        } else {
-            view = new TextureView(context);
-        }
+        View view = useTextureView ? new TextureView(context) : new SurfaceView(context);
         view.setLayoutParams(layoutParams);
 
         surfaceView = view;
@@ -140,25 +122,26 @@ public final class ExoPlayerView extends FrameLayout {
     }
 
     /**
-     * Set the {@link ExoPlayer} to use. The {@link ExoPlayer#addListener} method of the
-     * player will be called and previous
+     * Set the {@link SimpleExoPlayer} to use. The {@link SimpleExoPlayer#addTextOutput} and
+     * {@link SimpleExoPlayer#addVideoListener} method of the player will be called and previous
      * assignments are overridden.
      *
-     * @param player The {@link ExoPlayer} to use.
+     * @param player The {@link SimpleExoPlayer} to use.
      */
-    public void setPlayer(ExoPlayer player) {
-        if (this.player == player) {
-            return;
-        }
+    public void setPlayer(SimpleExoPlayer player) {
         if (this.player != null) {
+            this.player.removeTextOutput(componentListener);
+            this.player.removeVideoListener(componentListener);
             this.player.removeListener(componentListener);
             clearVideoView();
         }
         this.player = player;
-        shutterView.setVisibility(this.hideShutterView ? View.INVISIBLE : View.VISIBLE);
+        shutterView.setVisibility(VISIBLE);
         if (player != null) {
             setVideoView();
+            player.addVideoListener(componentListener);
             player.addListener(componentListener);
+            player.addTextOutput(componentListener);
         }
     }
 
@@ -192,13 +175,6 @@ public final class ExoPlayerView extends FrameLayout {
         }
     }
 
-    public void useSecureView(boolean useSecureView) {
-        if (useSecureView != this.useSecureView) {
-            this.useSecureView = useSecureView;
-            updateSurfaceView();
-        }
-    }
-
     public void setHideShutterView(boolean hideShutterView) {
         this.hideShutterView = hideShutterView;
         updateShutterViewVisibility();
@@ -227,7 +203,7 @@ public final class ExoPlayerView extends FrameLayout {
             }
         }
         // Video disabled so the shutter must be closed.
-        shutterView.setVisibility(this.hideShutterView ? View.INVISIBLE : View.VISIBLE);
+        shutterView.setVisibility(VISIBLE);
     }
 
     public void invalidateAspectRatio() {
@@ -235,21 +211,22 @@ public final class ExoPlayerView extends FrameLayout {
         layout.invalidateAspectRatio();
     }
 
-    private final class ComponentListener implements Player.Listener {
+    private final class ComponentListener implements VideoListener,
+            TextOutput, ExoPlayer.EventListener {
 
         // TextRenderer.Output implementation
 
         @Override
         public void onCues(List<Cue> cues) {
-            subtitleLayout.setCues(cues);
+            subtitleLayout.onCues(cues);
         }
 
-        // ExoPlayer.VideoListener implementation
+        // SimpleExoPlayer.VideoListener implementation
 
         @Override
-        public void onVideoSizeChanged(VideoSize videoSize) {
+        public void onVideoSizeChanged(int width, int height, int unappliedRotationDegrees, float pixelWidthHeightRatio) {
             boolean isInitialRatio = layout.getAspectRatio() == 0;
-            layout.setAspectRatio(videoSize.height == 0 ? 1 : (videoSize.width * videoSize.pixelWidthHeightRatio) / videoSize.height);
+            layout.setAspectRatio(height == 0 ? 1 : (width * pixelWidthHeightRatio) / height);
 
             // React native workaround for measuring and layout on initial load.
             if (isInitialRatio) {
@@ -265,43 +242,43 @@ public final class ExoPlayerView extends FrameLayout {
         // ExoPlayer.EventListener implementation
 
         @Override
-        public void onIsLoadingChanged(boolean isLoading) {
+        public void onLoadingChanged(boolean isLoading) {
             // Do nothing.
         }
 
         @Override
-        public void onPlaybackStateChanged(int playbackState) {
+        public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
             // Do nothing.
         }
 
         @Override
-        public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+        public void onPlayerError(ExoPlaybackException e) {
             // Do nothing.
         }
 
         @Override
-        public void onPlayerError(PlaybackException e) {
+        public void onPositionDiscontinuity(int reason) {
             // Do nothing.
         }
 
         @Override
-        public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
+        public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
             // Do nothing.
         }
 
         @Override
-        public void onTimelineChanged(Timeline timeline, int reason) {
-            // Do nothing.
-        }
-
-        @Override
-        public void onTracksChanged(Tracks tracks) {
+        public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
             updateForCurrentTrackSelections();
         }
 
         @Override
         public void onPlaybackParametersChanged(PlaybackParameters params) {
             // Do nothing
+        }
+
+        @Override
+        public void onSeekProcessed() {
+            // Do nothing.
         }
 
         @Override
