@@ -175,6 +175,8 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
             _playerLayer?.player = _player
             _playerViewController?.player = _player
         }
+       if _paused {return}
+       
         _player?.play()          
     }
     
