@@ -153,9 +153,8 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
     @objc func applicationWillResignActive(notification:NSNotification!) {
         if _playInBackground || _playWhenInactive || _paused {return}
-        
-        // _player?.pause()
-        // _player?.rate = 0.0
+    
+        _player?.rate = _rate        
         _player?.play()          
     }
     
