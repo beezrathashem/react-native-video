@@ -361,6 +361,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         commandCenter.playCommand.addTarget { [unowned self] event in
 //                           if self.player.rate == 1.0 {
             self._player?.play()
+             _player?.rate = _rate           
             self._paused = false
             return .success
 //                           }
