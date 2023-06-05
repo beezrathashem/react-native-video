@@ -155,7 +155,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         if _playInBackground || _playWhenInactive || _paused {return}
     
         // _player?.rate = _rate        
-        _player?.play()          
+        // _player?.play()          
     }
     
     @objc func applicationDidEnterBackground(notification:NSNotification!) {            
