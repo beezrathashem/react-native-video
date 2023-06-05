@@ -170,7 +170,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     }
     
     @objc func applicationWillEnterForeground(notification:NSNotification!) {
-        self.applyModifiers()
+        // self.applyModifiers()
         // if _playInBackground {
         //     _playerLayer?.player = _player
         //     _playerViewController?.player = _player
