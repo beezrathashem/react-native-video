@@ -151,9 +151,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
     // MARK: - App lifecycle handlers
     
-    @objc func applicationWillResignActive(notification:NSNotification!) {
-        if _playInBackground || _playWhenInactive || _paused {return}
-        _player?.play()          
+    @objc func applicationWillResignActive(notification:NSNotification!) {   
+     if _playInBackground || _playWhenInactive || _paused {return}
+     _player?.play()          
      _player?.rate = _rate
     }
     
@@ -163,6 +163,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         //     _playerLayer?.player = nil
         //     _playerViewController?.player = nil
         // }
+
        if _paused {return} 
         _player?.play() 
         _player?.rate = _rate       
@@ -170,12 +171,11 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
     
     @objc func applicationWillEnterForeground(notification:NSNotification!) {
         self.applyModifiers()
-        if _playInBackground {
-            _playerLayer?.player = _player
-            _playerViewController?.player = _player
-        }
+        // if _playInBackground {
+        //     _playerLayer?.player = _player
+        //     _playerViewController?.player = _player
+        // }
        if _paused {return}
-       
         _player?.play()   
         _player?.rate       
     }
@@ -614,6 +614,7 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         setControls(_controls)
         setPaused(_paused)
         setAllowsExternalPlayback(_allowsExternalPlayback)
+        _player?.rate = _rate
     }
     
     @objc
