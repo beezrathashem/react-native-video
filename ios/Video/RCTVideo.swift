@@ -176,7 +176,8 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         }
        if _paused {return}
        
-        _player?.play()          
+        _player?.play()   
+        _player?.rate       
     }
     
     // MARK: - Audio events
