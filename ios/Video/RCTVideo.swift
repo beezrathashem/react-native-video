@@ -164,9 +164,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         //     _playerViewController?.player = nil
         // }
 
-       if _paused {return} 
-        _player?.play() 
-        _player?.rate = _rate       
+    //    if _paused {return} 
+    //     _player?.play() 
+    //     _player?.rate = _rate       
     }
     
     @objc func applicationWillEnterForeground(notification:NSNotification!) {
@@ -175,9 +175,9 @@ class RCTVideo: UIView, RCTVideoPlayerViewControllerDelegate, RCTPlayerObserverH
         //     _playerLayer?.player = _player
         //     _playerViewController?.player = _player
         // }
-       if _paused {return}
-        _player?.play()   
-        _player?.rate       
+    //    if _paused {return}
+    //     _player?.play()   
+    //     _player?.rate       
     }
     
     // MARK: - Audio events
